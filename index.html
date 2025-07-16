@@ -4,6 +4,49 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Vonjo vi - We'll be there for you</title>
+    
+         <!-- Google tag (gtag.js) -->
+         <script async src="https://www.googletagmanager.com/gtag/js?id=G-W4FKRCGNQ1"></script>
+         <script>
+         window.dataLayer = window.dataLayer || [];
+         function gtag(){dataLayer.push(arguments);}
+         gtag('js', new Date());
+ 
+         gtag('config', 'G-W4FKRCGNQ1');
+         </script>
+     
+     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    
+    <!-- Firebase SDK -->
+    <script type="module">
+        // Import Firebase modules for Firestore
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js';
+        import { getFirestore, doc, getDoc, setDoc, updateDoc, increment } from 'https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js';
+        
+        // Your Firebase config (replace with your actual config)
+        const firebaseConfig = {
+        apiKey: "AIzaSyDzAq4hmktb3j8qbLkAMBzew0nDR_hqgsI",
+        authDomain: "vonjovi.firebaseapp.com",
+        projectId: "vonjovi",
+        storageBucket: "vonjovi.firebasestorage.app",
+        messagingSenderId: "499696640081",
+        appId: "1:499696640081:web:774fc1d5a4d827c9d41870",
+        measurementId: "G-Q9NMYZCM5T"
+    };
+        
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        
+        // Make Firebase functions globally available
+        window.firestore = db;
+        window.firestoreDoc = doc;
+        window.firestoreGetDoc = getDoc;
+        window.firestoreSetDoc = setDoc;
+        window.firestoreUpdateDoc = updateDoc;
+        window.firestoreIncrement = increment;
+    </script>
+    
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script>
         // Three.js Background Animation with Mouse Interaction
@@ -156,12 +199,26 @@
             if (isPlaying) {
                 audio.pause();
                 isPlaying = false;
+                // Track pause event
+                if (typeof gtag !== 'undefined') {
+                    gtag('event', 'audio_pause', {
+                        'event_category': 'audio',
+                        'event_label': 'We\'ll be there for you'
+                    });
+                }
             } else {
                 audio.play().catch(e => {
                     console.error('Error playing audio:', e);
                     alert('Unable to play audio. Please check that the audio file "Vonjo_vi_Well_be_there_for_you.mp3" exists in the same directory.');
                 });
                 isPlaying = true;
+                // Track play event
+                if (typeof gtag !== 'undefined') {
+                    gtag('event', 'audio_play', {
+                        'event_category': 'audio',
+                        'event_label': 'We\'ll be there for you'
+                    });
+                }
             }
             updatePlayButton();
         }
@@ -286,6 +343,168 @@
             return mins + ':' + (secs < 10 ? '0' : '') + secs;
         }
     
+        // Like Button Functionality with Cloud Firestore
+        async function toggleLike() {
+            const likeBtn = document.getElementById('likeBtn');
+            const likeCount = document.getElementById('likeCount');
+            const heart = likeBtn.querySelector('.heart');
+            
+            // Check if user has already liked (stored locally)
+            const hasLiked = localStorage.getItem('vonjo-vi-user-liked') === 'true';
+            
+            try {
+                if (!hasLiked) {
+                    // Like the track
+                    likeBtn.classList.add('liked');
+                    heart.style.color = '#EE5340';
+                    heart.innerHTML = '❤️';
+                    
+                    // Update Firestore global count
+                    if (window.firestore && window.firestoreDoc && window.firestoreUpdateDoc && window.firestoreIncrement) {
+                        const docRef = window.firestoreDoc(window.firestore, 'tracks', 'vonjo-vi');
+                        await window.firestoreUpdateDoc(docRef, {
+                            likes: window.firestoreIncrement(1)
+                        });
+                        
+                        // Get updated count
+                        const docSnap = await window.firestoreGetDoc(docRef);
+                        const newCount = docSnap.exists() ? (docSnap.data().likes || 1) : 1;
+                        likeCount.textContent = newCount;
+                    } else {
+                        // Fallback to local storage if Firestore isn't loaded
+                        let currentCount = parseInt(localStorage.getItem('vonjo-vi-likes') || '0');
+                        currentCount++;
+                        localStorage.setItem('vonjo-vi-likes', currentCount.toString());
+                        likeCount.textContent = currentCount;
+                    }
+                    
+                    // Mark user as having liked
+                    localStorage.setItem('vonjo-vi-user-liked', 'true');
+                    
+                    // Track like event in Google Analytics
+                    if (typeof gtag !== 'undefined') {
+                        gtag('event', 'like_track', {
+                            'event_category': 'engagement',
+                            'event_label': 'We\'ll be there for you',
+                            'value': 1
+                        });
+                    }
+                    
+                    // Show thank you message
+                    showLikeMessage('Thanks for the love! ❤️');
+                    
+                } else {
+                    // Unlike the track
+                    likeBtn.classList.remove('liked');
+                    heart.style.color = '#FFFFFF';
+                    heart.innerHTML = '🤍';
+                    
+                    // Update Firestore global count
+                    if (window.firestore && window.firestoreDoc && window.firestoreUpdateDoc && window.firestoreIncrement) {
+                        const docRef = window.firestoreDoc(window.firestore, 'tracks', 'vonjo-vi');
+                        await window.firestoreUpdateDoc(docRef, {
+                            likes: window.firestoreIncrement(-1)
+                        });
+                        
+                        // Get updated count
+                        const docSnap = await window.firestoreGetDoc(docRef);
+                        const newCount = Math.max(0, docSnap.exists() ? (docSnap.data().likes || 0) : 0);
+                        likeCount.textContent = newCount;
+                    } else {
+                        // Fallback to local storage if Firestore isn't loaded
+                        let currentCount = parseInt(localStorage.getItem('vonjo-vi-likes') || '0');
+                        currentCount = Math.max(0, currentCount - 1);
+                        localStorage.setItem('vonjo-vi-likes', currentCount.toString());
+                        likeCount.textContent = currentCount;
+                    }
+                    
+                    // Mark user as not having liked
+                    localStorage.setItem('vonjo-vi-user-liked', 'false');
+                    
+                    // Track unlike event in Google Analytics
+                    if (typeof gtag !== 'undefined') {
+                        gtag('event', 'unlike_track', {
+                            'event_category': 'engagement',
+                            'event_label': 'We\'ll be there for you',
+                            'value': -1
+                        });
+                    }
+                }
+            } catch (error) {
+                console.error('Error updating likes:', error);
+                showLikeMessage('Oops! Unable to save your like. Please try again.');
+            }
+        }
+        
+        function showLikeMessage(message) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'like-message';
+            messageDiv.textContent = message;
+            messageDiv.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                background: linear-gradient(135deg, #EE5340, #6CACE4);
+                color: white;
+                padding: 1rem 1.5rem;
+                border-radius: 10px;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+                z-index: 10000;
+                font-weight: 600;
+                animation: slideIn 0.5s ease;
+            `;
+            
+            document.body.appendChild(messageDiv);
+            
+            setTimeout(() => {
+                messageDiv.style.animation = 'slideOut 0.5s ease';
+                setTimeout(() => {
+                    if (messageDiv.parentNode) {
+                        messageDiv.parentNode.removeChild(messageDiv);
+                    }
+                }, 500);
+            }, 3000);
+        }
+        
+        async function initializeLikeButton() {
+            const likeCount = document.getElementById('likeCount');
+            const likeBtn = document.getElementById('likeBtn');
+            const heart = likeBtn.querySelector('.heart');
+            
+            try {
+                // Get global like count from Firestore
+                if (window.firestore && window.firestoreDoc && window.firestoreGetDoc) {
+                    const docRef = window.firestoreDoc(window.firestore, 'tracks', 'vonjo-vi');
+                    const docSnap = await window.firestoreGetDoc(docRef);
+                    
+                    if (docSnap.exists()) {
+                        const globalLikes = docSnap.data().likes || 0;
+                        likeCount.textContent = globalLikes;
+                    } else {
+                        // Initialize document if it doesn't exist
+                        await window.firestoreSetDoc(docRef, { likes: 0 });
+                        likeCount.textContent = '0';
+                    }
+                } else {
+                    // Fallback to local storage
+                    const localLikes = parseInt(localStorage.getItem('vonjo-vi-likes') || '0');
+                    likeCount.textContent = localLikes;
+                }
+                
+                // Check if current user has liked
+                const hasLiked = localStorage.getItem('vonjo-vi-user-liked') === 'true';
+                if (hasLiked) {
+                    likeBtn.classList.add('liked');
+                    heart.style.color = '#EE5340';
+                    heart.innerHTML = '❤️';
+                }
+                
+            } catch (error) {
+                console.error('Error initializing like button:', error);
+                likeCount.textContent = '0';
+            }
+        }
+    
         function hidePreloader() {
             const preloader = document.getElementById('preloader');
             preloader.classList.add('hidden');
@@ -302,13 +521,22 @@
             renderer.setSize(window.innerWidth, window.innerHeight);
         }
     
-        window.addEventListener('load', () => {
+        window.addEventListener('load', async () => {
             initThreeJS();
             initAudioPlayer();
+            await initializeLikeButton();
             window.addEventListener('resize', handleResize);
             window.addEventListener('mousemove', handleMouseMove);
             
             setTimeout(hidePreloader, 1000);
+            
+            // Track page view
+            if (typeof gtag !== 'undefined') {
+                gtag('event', 'page_view', {
+                    'page_title': 'Vonjo vi Landing Page',
+                    'page_location': window.location.href
+                });
+            }
         });
     
         if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
@@ -429,11 +657,53 @@
             padding: 2rem;
         }
 
+        .track-title-container {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
         .track-title {
             font-size: 1.8rem;
             font-weight: 600;
-            margin-bottom: 1rem;
             color: #FFFFFF;
+            flex: 1;
+        }
+
+        .like-button {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 25px;
+            padding: 0.5rem 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 0.9rem;
+            color: #FFFFFF;
+        }
+
+        .like-button:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateY(-2px);
+        }
+
+        .like-button.liked {
+            background: rgba(238, 83, 64, 0.2);
+            border-color: rgba(238, 83, 64, 0.4);
+        }
+
+        .heart {
+            font-size: 1.2rem;
+            transition: all 0.3s ease;
+        }
+
+        .like-count {
+            font-weight: 600;
+            min-width: 20px;
+            text-align: center;
         }
 
         .track-subtitle {
@@ -623,10 +893,25 @@
             .container {
                 padding: 1rem;
             }
+
+            .track-title-container {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 0.5rem;
+            }
+
+            .like-button {
+                align-self: flex-start;
+            }
         }
 
         /* Focus states for accessibility */
         .btn:focus {
+            outline: 2px solid #6CACE4;
+            outline-offset: 2px;
+        }
+
+        .like-button:focus {
             outline: 2px solid #6CACE4;
             outline-offset: 2px;
         }
@@ -660,6 +945,16 @@
             0% { opacity: 1; }
             50% { opacity: 0.7; }
             100% { opacity: 1; }
+        }
+
+        @keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        @keyframes slideOut {
+            from { transform: translateX(0); opacity: 1; }
+            to { transform: translateX(100%); opacity: 0; }
         }
 
         /* Icons */
@@ -1040,7 +1335,13 @@
             </section>
 
             <section class="featured-track">
-                <h3 class="track-title">We'll be there for you</h3>
+                <div class="track-title-container">
+                    <h3 class="track-title">We'll be there for you</h3>
+                    <button class="like-button" id="likeBtn" onclick="toggleLike()" aria-label="Like this track">
+                        <span class="heart">🤍</span>
+                        <span class="like-count" id="likeCount">0</span>
+                    </button>
+                </div>
                 <p class="track-subtitle">(these 4 Ps we swear to you)</p>
                 
                 <div class="audio-player">
@@ -1144,13 +1445,12 @@
                     <span class="coming-soon" aria-hidden="true">Coming Soon</span>
                 </div>
             </div>
-        
-
+        </section>
 
         <section class="about-section">
             <h2>About BGB</h2>
-            <p>Rare isn’t just a category for us.</p>
-            <p>It’s a way of thinking, behaving and delivering efficiently on the needs of patients and the HCPs who treat them. To us, a disease that progresses this quickly needs equally progressive thinking and partnerships.</p>
+            <p>Rare isn't just a category for us.</p>
+            <p>It's a way of thinking, behaving and delivering efficiently on the needs of patients and the HCPs who treat them. To us, a disease that progresses this quickly needs equally progressive thinking and partnerships.</p>
                 <p><strong>Grounded in science. Driven by human truth. Fueled by exceptional creativity.</strong></p>
                 <p>This is our commitment to Sobi Vonjo, HCPs, and their patients. Rare, in every way, shape and form.</p>
         </br></br>
@@ -1222,16 +1522,6 @@
                                 Download Artwork
                             </a>
                         </div>
-                        <!-- <div class="download-card">
-                            <h3>Press Kit</h3>
-                            <p>Complete media package for promotional use</p>
-                            <a href="vonjo-vi-press-kit.pdf" class="btn btn-secondary" download title="Download press kit and media assets" style="margin-top: 1rem;">
-                                <svg class="icon" viewBox="0 0 24 24" aria-hidden="true">
-                                    <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8zM14 2v6h6M16 13H8M16 17H8M10 9H8"/>
-                                </svg>
-                                Download Press Kit
-                            </a>
-                        </div> -->
                         <div class="download-card">
                             <h3>Lyrics Sheet</h3>
                             <p>View the complete lyrics</p>
@@ -1244,7 +1534,6 @@
                         </div>
                     </div>
                 </section>
-                
-       <!--<footer class="footer">
-            <a href="#" target="_top">Back to top</a>
-        </footer>--> 
+    </div>
+</body>
+</html>

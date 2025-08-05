@@ -525,12 +525,83 @@
             camera.updateProjectionMatrix();
             renderer.setSize(window.innerWidth, window.innerHeight);
         }
+        //Update Bio
+        // Band member bio functionality
+        function initializeBandMemberBios() {
+    const memberCards = document.querySelectorAll('.band-member-card');
     
+    memberCards.forEach(card => {
+        const expandBtn = card.querySelector('.expand-btn');
+        const memberBio = card.querySelector('.member-bio');
+        
+        if (!expandBtn || !memberBio) return; // Safety check
+        
+        expandBtn.addEventListener('click', function() {
+            const isExpanded = expandBtn.getAttribute('aria-expanded') === 'true';
+            const memberName = card.querySelector('.member-name').textContent;
+            const memberPosition = card.querySelector('.member-position').textContent;
+            
+            if (isExpanded) {
+                // Collapse
+                expandBtn.setAttribute('aria-expanded', 'false');
+                memberBio.setAttribute('aria-hidden', 'true');
+                memberBio.classList.remove('expanded');
+                card.classList.remove('expanded');
+                expandBtn.innerHTML = 'Read Bio <span class="expand-icon" aria-hidden="true">▼</span>';
+                
+                // Track bio collapse
+                if (typeof gtag !== 'undefined') {
+                    gtag('event', 'bio_collapse', {
+                        'event_category': 'team_engagement',
+                        'event_label': memberName,
+                        'member_position': memberPosition,
+                        'custom_parameter_1': 'band_member_bio'
+                    });
+                }
+            } else {
+                // Expand
+                expandBtn.setAttribute('aria-expanded', 'true');
+                memberBio.setAttribute('aria-hidden', 'false');
+                memberBio.classList.add('expanded');
+                card.classList.add('expanded');
+                expandBtn.innerHTML = 'Close Bio <span class="expand-icon" aria-hidden="true">▼</span>';
+                
+                // Track bio expansion
+                if (typeof gtag !== 'undefined') {
+                    gtag('event', 'bio_expand', {
+                        'event_category': 'team_engagement',
+                        'event_label': memberName,
+                        'member_position': memberPosition,
+                        'custom_parameter_1': 'band_member_bio'
+                    });
+                }
+                
+                // Smooth scroll to ensure the bio is visible
+                setTimeout(() => {
+                    memberBio.scrollIntoView({ 
+                        behavior: 'smooth', 
+                        block: 'nearest' 
+                    });
+                }, 200);
+            }
+        });
+        
+        // Keyboard navigation
+        expandBtn.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                expandBtn.click();
+            }
+        });
+    });
+}
+
         window.addEventListener('load', () => {
             initThreeJS();
             initAudioPlayer();
             initializeLikeButton();
             initializeDownloadTracking();
+            initializeBandMemberBios(); // Added Bios
             window.addEventListener('resize', handleResize);
             window.addEventListener('mousemove', handleMouseMove);
             
@@ -575,8 +646,8 @@
             font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
             background: linear-gradient(135deg, #003b5c 0%, #1a4c6b 50%, #6CACE4 100%);
             min-height: 100vh;
-            overflow-x: hidden;
             color: #FFFFFF;
+            padding: 2rem;
         }
 
         #three-canvas {
@@ -778,7 +849,15 @@
             font-size: 2rem;
             font-weight: 600;
             margin-bottom: 2rem;
-            text-align: center;
+            color: #FFFFFF;
+        }
+
+        .section-description {
+            max-width: 800px;
+            margin: 0 auto 3rem auto;
+            font-size: 1.1rem;
+            line-height: 1.6;
+            opacity: 0.9;
         }
 
         .track-list {
@@ -1216,15 +1295,10 @@
                 gap: 1rem;
             }
         }
-        .band-members-section {
-            padding: 3rem 0;
-            text-align: center;
-        }
-
         .band-members-grid {
             display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 2rem;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
             margin-bottom: 2rem;
         }
 
@@ -1234,11 +1308,22 @@
             padding: 1.5rem;
             transition: all 0.3s ease;
             text-align: center;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+            /* No flexbox changes needed for top alignment */
         }
 
         .band-member-card:hover {
             transform: translateY(-5px);
             background: rgba(255, 255, 255, 0.1);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        }
+
+        .band-member-card:focus-within {
+            outline: 2px solid #6CACE4;
+            outline-offset: 2px;
         }
 
         .member-thumbnail {
@@ -1246,20 +1331,152 @@
             height: 120px;
             border-radius: 50%;
             object-fit: cover;
-            margin-bottom: 1rem;
+            margin: 0 auto 1rem;
             border: 3px solid #6CACE4;
+            display: block;
         }
 
         .member-name {
             font-size: 1.2rem;
             font-weight: 600;
             margin-bottom: 0.25rem;
+            color: #FFFFFF;
         }
 
-        .member-position {
-            font-size: 0.9rem;
-            color: #a6d1f7;
-            opacity: 0.9;
+        /* Set consistent spacing for member position text: */
+        .band-members-section .member-position {
+        font-size: 0.9rem; /* Much smaller font size */
+        color: #a6d1f7;
+        opacity: 0.9;
+        line-height: 1.3; /* Better line spacing */
+        min-height: 2.6rem; /* Fixed height to accommodate 1-2 lines */
+        margin-bottom: 1.5rem; /* Consistent spacing below */
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        }
+        .expand-btn {
+        background: rgba(255, 255, 255, 0.2);
+        color: #FFFFFF;
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        border-radius: 50px;
+        padding: 1rem 2rem;
+        font-size: 1rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        margin: 0 auto;
+        min-height: 44px;
+         }
+
+        .expand-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+        }
+
+        .expand-btn:focus {
+            outline: 2px solid #6CACE4;
+            outline-offset: 2px;
+        }
+
+        .expand-icon {
+            transition: transform 0.3s ease;
+            font-size: 1.2rem;
+        }
+
+        .member-bio {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.4s ease, opacity 0.3s ease;
+            opacity: 0;
+            margin-top: 1rem;
+        }
+
+        .member-bio.expanded {
+            max-height: 500px;
+            opacity: 1;
+        }
+
+        .bio-content {
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 10px;
+            padding: 1.5rem;
+            text-align: left;
+            line-height: 1.6;
+            font-size: 0.95rem;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            margin-top: 1rem;
+        }
+
+        .band-member-card.expanded {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .band-member-card.expanded .expand-icon {
+            transform: rotate(180deg);
+        }
+
+        /* Accessibility improvements */
+        .sr-only {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: hidden;
+            clip: rect(0, 0, 0, 0);
+            white-space: nowrap;
+            border: 0;
+        }
+
+        /* Mobile responsiveness */
+        @media (max-width: 768px) {
+            .band-members-grid {
+                grid-template-columns: 1fr;
+                gap: 1rem;
+            }
+            
+            .band-member-card {
+                padding: 1rem;
+            }
+            
+            .member-thumbnail {
+                width: 100px;
+                height: 100px;
+            }
+            
+            .member-name {
+                font-size: 1.1rem;
+            }
+            
+            .bio-content {
+                padding: 1rem;
+                font-size: 0.9rem;
+            }
+        }
+
+        /* High contrast mode support */
+        @media (prefers-contrast: high) {
+            .band-member-card {
+                border: 2px solid #FFFFFF;
+            }
+            
+            .expand-btn {
+                border: 2px solid #FFFFFF;
+            }
+        }
+
+        /* Reduced motion support */
+        @media (prefers-reduced-motion: reduce) {
+            .band-member-card,
+            .expand-btn,
+            .expand-icon,
+            .member-bio {
+                transition: none;
+            }
         }
 
         @media (max-width: 992px) {
@@ -1430,67 +1647,212 @@
                 <p><strong>Grounded in science. Driven by human truth. Fueled by exceptional creativity.</strong></p>
                 <p>This is our commitment to Sobi Vonjo, HCPs, and their patients. Rare, in every way, shape and form.</p>
         <br><br>
-                   <h2 id="band">The Band</h2>
+                   <h2 >The Band</h2>
                    <p>We take the work very seriously but we also like to laugh, collaborate and solve key business problems, together. We can even help when the show goes on the road, making stops at National Sales Meetings, conferences and any venue or channel in between.</p>
                 
-                   <section class="band-members-section"></section>
-                    <div class="band-members-grid">
-                        <div class="band-member-card">
-                            <img src="Brendon_Rock.jpg" alt="Photo of Member 8" class="member-thumbnail">
-                            <h4 class="member-name">Brendon Phalen, MD, MBA</h4>
-                            <p class="member-position">Founding Partner (Executive Producer)</p>
-                        </div>  
-                        <div class="band-member-card">
-                            <img src="Julie_Rock.jpg" alt="Photo of Member 4" class="member-thumbnail">
-                            <h4 class="member-name">Julie Yoon</h4>
-                            <p class="member-position">Sobi Client Partner (Lead Vocals)</p>
+        <section class="band-members-section">
+
+            <div class="band-members-grid">
+                <!-- Brendon Phalen -->
+                <div class="band-member-card" data-member="brendon">
+                    <img src="Brendon_Rock.jpg" alt="Photo of Brendon Phalen" class="member-thumbnail">
+                    <h3 class="member-name">Brendon Phalen, MD, MBA</h3>
+                    <p class="member-position">Founding Partner (Executive Producer)</p>
+                    <button class="expand-btn" aria-expanded="false" aria-controls="brendon-bio">
+                        Read Bio
+                        <span class="expand-icon" aria-hidden="true">▼</span>
+                    </button>
+                    <div class="member-bio" id="brendon-bio" aria-hidden="true">
+                        <div class="bio-content">
+                            Even though he's one of the founders of BGB, Brendon still "puts his pants on one leg at a time", just like legendary producer Bruce Dickinson. Team needs more cowbell? He's on it. Team needs more time in the studio or on the road to make a difference? He's on it. The "B" in BGB also has an MD, so rare diseases take on even more meaning.
                         </div>
-                        <div class="band-member-card">
-                            <img src="Subb_Rock.jpg" alt="Photo of Member 1" class="member-thumbnail">
-                            <h4 class="member-name">Subbha Dhalladoo</h4>
-                            <p class="member-position">Brand Steward (Harmonics)</p>
-                        </div>
-                        <div class="band-member-card">
-                            <img src="Anka_Rock.jpg" alt="Photo of Member 2" class="member-thumbnail">
-                            <h4 class="member-name">Anka Gorgiev, PhD</h4>
-                            <p class="member-position">Behavioral Strategist (Rhythm)</p>
-                        </div>
-                    
-                      
                     </div>
-                    
-                    <div class="band-members-grid">
-                         <div class="band-member-card">
-                            <img src="Nolan_Rock.jpg" alt="Photo of Member 3" class="member-thumbnail">
-                            <h4 class="member-name">Nolan Mayer</h4>
-                            <p class="member-position">Engagement Strategy (Strings)</p>
+                </div>
+
+                <!-- Julie Yoon -->
+                <div class="band-member-card" data-member="julie">
+                    <img src="Julie_Rock.jpg" alt="Photo of Julie Yoon" class="member-thumbnail">
+                    <h3 class="member-name">Julie Yoon</h3>
+                    <p class="member-position">Sobi Client Partner (Lead Vocals)</p>
+                    <button class="expand-btn" aria-expanded="false" aria-controls="julie-bio">
+                        Read Bio
+                        <span class="expand-icon" aria-hidden="true">▼</span>
+                    </button>
+                    <div class="member-bio" id="julie-bio" aria-hidden="true">
+                        <div class="bio-content">
+                            Our lead singer has the pipes to belt out any brand story with a 1000-watt smile. Julie has been building brands and bands for years, giving her the spidey sense to know when we need more time to practice and when we're ready to release our latest and greatest.
                         </div>
-                        <div class="band-member-card">
-                            <img src="Nala_Rock.jpg" alt="Photo of Member 5" class="member-thumbnail">
-                            <h4 class="member-name">Nala Kim, MEng</h4>
-                            <p class="member-position">Scientific Advisor (Keyboard)</p>
-                        </div>
-                        <div class="band-member-card">
-                            <img src="Jerlyn_Rock.jpg" alt="Photo of Member 7" class="member-thumbnail">
-                            <h4 class="member-name">Jerlyn O'Donnell</h4>
-                            <p class="member-position">Art (Electronics/Synth)</p>
-                        </div>
-                        <div class="band-member-card">
-                            <img src="Dan_Rock.jpg" alt="Photo of Member 6" class="member-thumbnail">
-                            <h4 class="member-name">Dan Donovan</h4>
-                            <p class="member-position">Copy (Songwriter)</p>
-                        </div>
-                       
-                      
                     </div>
-                </section>
+                </div>
+
+                <!-- Dom Orologio -->
+                <div class="band-member-card" data-member="dom">
+                    <img src="Dom_Rock.jpg" alt="Photo of Dom Orologio" class="member-thumbnail">
+                    <h3 class="member-name">Dom Orologio</h3>
+                    <p class="member-position">Executive Creative Director (Live Performances)</p>
+                    <button class="expand-btn" aria-expanded="false" aria-controls="dom-bio">
+                        Read Bio
+                        <span class="expand-icon" aria-hidden="true">▼</span>
+                    </button>
+                    <div class="member-bio" id="dom-bio" aria-hidden="true">
+                        <div class="bio-content">
+                            Gold records or gold CANNES Lions? Why should we have to choose? As our ECD, trained in Art and with a last name that means "watch" in Italian, you know Dom has an eye on every stroke a brand makes. Ask him to share his favorite brands, bands and designers and he'll drop some serious knowledge.
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Anne Marie Crivelli -->
+                <div class="band-member-card" data-member="annemarie">
+                    <img src="Amc_Rock.jpg" alt="Photo of Anne Marie Crivelli" class="member-thumbnail">
+                    <h3 class="member-name">Anne Marie Crivelli</h3>
+                    <p class="member-position">Omnichannel, Platforms & Partnerships</p>
+                    <button class="expand-btn" aria-expanded="false" aria-controls="annemarie-bio">
+                        Read Bio
+                        <span class="expand-icon" aria-hidden="true">▼</span>
+                    </button>
+                    <div class="member-bio" id="annemarie-bio" aria-hidden="true">
+                        <div class="bio-content">
+                            Anne Marie has her fingers on the pulse of every stream, station and channel we need to have in our brand plan. Ask her which systems, content and approaches work best and she'll break it down for you in detail. And the details, are everything.
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Simi Krishnan -->
+                <div class="band-member-card" data-member="simi">
+                    <img src="Simi_Rock.jpg" alt="Photo of Simi Krishnan" class="member-thumbnail">
+                    <h3 class="member-name">Simi Krishnan</h3>
+                    <p class="member-position">Head of Performance & Analytics (Channel Mix)</p>
+                    <button class="expand-btn" aria-expanded="false" aria-controls="simi-bio">
+                        Read Bio
+                        <span class="expand-icon" aria-hidden="true">▼</span>
+                    </button>
+                    <div class="member-bio" id="simi-bio" aria-hidden="true">
+                        <div class="bio-content">
+                            Simi loves to crunch the numbers but what she really wants to know is: What are the nuggets? What moves the needle? She helps us tune in what matters and tune out what doesn't. Decisions, data and decision makers...all in perfect balance.
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Hans Riis -->
+                <div class="band-member-card" data-member="hans">
+                    <img src="Hans_Rock.jpg" alt="Photo of Hans Riis" class="member-thumbnail">
+                    <h3 class="member-name">Hans Riis</h3>
+                    <p class="member-position">Innovation, Systems Engineering</p>
+                    <button class="expand-btn" aria-expanded="false" aria-controls="hans-bio">
+                        Read Bio
+                        <span class="expand-icon" aria-hidden="true">▼</span>
+                    </button>
+                    <div class="member-bio" id="hans-bio" aria-hidden="true">
+                        <div class="bio-content">
+                            Schooled in design and fashion, steeped in innovation and marketing automation--Hans is one of our most notable polymaths, as he sees solutions where others see gaps. He also sees collaboration as the key to any human endeavor. The two i's in his last name might as well stand for 'insanely innovative.'
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Subbha Dhalladoo -->
+                <div class="band-member-card" data-member="subbha">
+                    <img src="Subb_Rock.jpg" alt="Photo of Subbha Dhalladoo" class="member-thumbnail">
+                    <h3 class="member-name">Subbha Dhalladoo</h3>
+                    <p class="member-position">Brand Steward (Harmonics)</p>
+                    <button class="expand-btn" aria-expanded="false" aria-controls="subbha-bio">
+                        Read Bio
+                        <span class="expand-icon" aria-hidden="true">▼</span>
+                    </button>
+                    <div class="member-bio" id="subbha-bio" aria-hidden="true">
+                        <div class="bio-content">
+                            When everyone clicks and everything just works as it should, the harmonizing can look easy. On time, on budget and on track. Subbha keeps a keen eye and ear on how it's all coming together and reminds us when we need to shift our time, our focus or our energy to ensure you and your team can see and feel the success.
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Anka Gorgiev -->
+                <div class="band-member-card" data-member="anka">
+                    <img src="Anka_Rock.jpg" alt="Photo of Anka Gorgiev" class="member-thumbnail">
+                    <h3 class="member-name">Anka Gorgiev, PhD</h3>
+                    <p class="member-position">Behavioral Strategist (Rhythm)</p>
+                    <button class="expand-btn" aria-expanded="false" aria-controls="anka-bio">
+                        Read Bio
+                        <span class="expand-icon" aria-hidden="true">▼</span>
+                    </button>
+                    <div class="member-bio" id="anka-bio" aria-hidden="true">
+                        <div class="bio-content">
+                            Brands and bands run on vibes. When everyone and everything is in rhythm, the strategy is almost invisible to the audience. At every touchpoint, Anka pays special attention to every little sign and signal, to ensure the right behavior is happening across channels and finding new ways to measure it.
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Nolan Mayer -->
+                <div class="band-member-card" data-member="nolan">
+                    <img src="Nolan_Rock.jpg" alt="Photo of Nolan Mayer" class="member-thumbnail">
+                    <h3 class="member-name">Nolan Mayer</h3>
+                    <p class="member-position">Engagement Strategy (Strings)</p>
+                    <button class="expand-btn" aria-expanded="false" aria-controls="nolan-bio">
+                        Read Bio
+                        <span class="expand-icon" aria-hidden="true">▼</span>
+                    </button>
+                    <div class="member-bio" id="nolan-bio" aria-hidden="true">
+                        <div class="bio-content">
+                            Striking the right chord is Nolan's jam. Sometimes just a shift in approach, chord or type of performance will give the brand and band the new direction it needs. Small acoustic number or packed conference halls, he has the amp ready.
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Nala Kim -->
+                <div class="band-member-card" data-member="nala">
+                    <img src="Nala_Rock.jpg" alt="Photo of Nala Kim" class="member-thumbnail">
+                    <h3 class="member-name">Nala Kim</h3>
+                    <p class="member-position">Scientific Advisor (Keyboard)</p>
+                    <button class="expand-btn" aria-expanded="false" aria-controls="nala-bio">
+                        Read Bio
+                        <span class="expand-icon" aria-hidden="true">▼</span>
+                    </button>
+                    <div class="member-bio" id="nala-bio" aria-hidden="true">
+                        <div class="bio-content">
+                            Tickling the scientific ivories is Nala's specialty. Sometimes the story we want to tell is pretty black and white but occasionally we need to soft pedal or damper certain base notes, to ensure that story really resonates.
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Jerlyn O'Donnell -->
+                <div class="band-member-card" data-member="jerlyn">
+                    <img src="Jerlyn_Rock.jpg" alt="Photo of Jerlyn O'Donnell" class="member-thumbnail">
+                    <h3 class="member-name">Jerlyn O'Donnell</h3>
+                    <p class="member-position">Art (Electronics/Synth)</p>
+                    <button class="expand-btn" aria-expanded="false" aria-controls="jerlyn-bio">
+                        Read Bio
+                        <span class="expand-icon" aria-hidden="true">▼</span>
+                    </button>
+                    <div class="member-bio" id="jerlyn-bio" aria-hidden="true">
+                        <div class="bio-content">
+                            Jerlyn is our master of design, synth, electronics and countless digital drops. Specializing in delightful, accessible experiences [addressing visual, auditory, motor, and cognitive needs], she spans from illustration to coding and UX to AI, she keeps us on the leading edge of culture, tech and experience design.
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Dan Donovan -->
+                <div class="band-member-card" data-member="dan">
+                    <img src="Dan_Rock.jpg" alt="Photo of Dan Donovan" class="member-thumbnail">
+                    <h3 class="member-name">Dan Donovan</h3>
+                    <p class="member-position">Creative Director (Composition)</p>
+                    <button class="expand-btn" aria-expanded="false" aria-controls="dan-bio">
+                        Read Bio
+                        <span class="expand-icon" aria-hidden="true">▼</span>
+                    </button>
+                    <div class="member-bio" id="dan-bio" aria-hidden="true">
+                        <div class="bio-content">
+                            Dan is first and foremost, a storyteller. A classically trained Creative Director and copywriter, he loves every aspect of the written word, speaks many languages and even loves to sing. But his greatest love is when a human being, condition or disease gets the attention they or it deserves. When that happens, he's usually at a loss for words.
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
                 <section class="download-section">
                     <h2 class="section-title">Downloads & More</h2>
                     <div class="download-grid">
                         <div class="download-card">
                             <h3>Album Art</h3>
                             <p>High-resolution album artwork</p>
-                            <a href="Poster.pdf" class="btn btn-secondary" target="_blank" download title="Download official album artwork" style="margin-top: 1rem;">
+                            <a href="Poster.pdf" class="btn btn-primary" target="_blank" download title="Download official album artwork" style="margin-top: 1rem;">
                                 <svg class="icon" viewBox="0 0 24 24" aria-hidden="true">
                                     <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/>
                                 </svg>
@@ -1500,7 +1862,7 @@
                         <div class="download-card">
                             <h3>Lyrics Sheet</h3>
                             <p>View the complete lyrics</p>
-                            <a href="lyric_sheet.pdf" class="btn btn-secondary" target="_blank" download title="Download complete lyrics and interpretations" style="margin-top: 1rem;">
+                            <a href="lyric_sheet.pdf" class="btn btn-primary" target="_blank" download title="Download complete lyrics and interpretations" style="margin-top: 1rem;">
                                 <svg class="icon" viewBox="0 0 24 24" aria-hidden="true">
                                     <path d="M9 9h6m-6 4h6m2 5H7a2 2 0 01-2-2V6a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V16a2 2 0 01-2 2z"/>
                                 </svg>

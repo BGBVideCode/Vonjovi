@@ -950,6 +950,28 @@
         }
 
         @media (max-width: 768px) {
+            .band-members-grid {
+            grid-template-columns: 1fr;
+            gap: 1rem;
+            }
+            
+            .band-member-card {
+                padding: 1rem; /* Keep this */
+            }
+            
+            .member-thumbnail {
+                width: 100px;
+                height: 100px;
+            }
+            
+            .member-name {
+                font-size: 1.1rem;
+            }
+            
+            .bio-content {
+                padding: 0.5rem; /* Even smaller padding */
+                 font-size: 0.9rem;
+            }
             .main-content {
                 grid-template-columns: 1fr;
                 gap: 2rem;
@@ -972,7 +994,7 @@
             }
 
             .container {
-                padding: 1rem;
+               padding: 0.5rem;
             }
 
             .track-title-container {

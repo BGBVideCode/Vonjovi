@@ -694,7 +694,7 @@
         .main-content {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 3rem;
+            gap: 1rem;
             align-items: center;
             margin-bottom: 4rem;
         }
@@ -1249,6 +1249,17 @@
                 grid-template-columns: 1fr;
                 gap: 1rem;
             }
+            .featured-track {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(15px);
+            border-radius: 15px;
+            padding: 0.5rem;
+            }
+            .track-title-container {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 0.5rem;
+            }
             
             /* Reduce card horizontal padding */
             .band-member-card {
@@ -1277,7 +1288,7 @@
             /* Main layout mobile styles */
             .main-content {
                 grid-template-columns: 1fr;
-                gap: 2rem;
+                gap: 0rem;
             }
             
             .album-cover {
@@ -1297,7 +1308,7 @@
             }
 
             .container {
-                padding: 0.5rem;
+                padding: 1rem; /* Changed from 0.5rem */
             }
 
             .track-title-container {

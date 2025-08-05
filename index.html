@@ -1243,7 +1243,7 @@
             white-space: nowrap;
             border: 0;
         }
-
+/* Replaced @media (max-width: 768px) sections with this single one: */
         @media (max-width: 768px) {
             .band-members-grid {
                 grid-template-columns: 1fr;
@@ -1264,19 +1264,17 @@
                 font-size: 1.1rem;
             }
             
-            /* REMOVE the conflicting .band-member-card .bio-content rule */
-            /* Only keep this one rule for bio content: */
+            /* Since about-section now has 0rem padding, adjust bio content accordingly */
             .member-bio.expanded .bio-content {
-                /* Pull back to container edges */
-                margin-left: calc(-2.5rem - 0.5rem); /* About-section padding + Card padding */
-                margin-right: calc(-2.5rem - 0.5rem);
+                margin-left: calc(-0.5rem - 0.5rem); /* Card padding + container padding */
+                margin-right: calc(-0.5rem - 0.5rem);
                 border-radius: 0;
-                padding-left: 2.5rem; /* Match about-section padding for proper text alignment */
-                padding-right: 2.5rem;
+                padding-left: 1rem;
+                padding-right: 1rem;
                 font-size: 0.9rem;
             }
             
-            /* Other existing mobile styles... */
+            /* Main layout mobile styles */
             .main-content {
                 grid-template-columns: 1fr;
                 gap: 2rem;
@@ -1299,7 +1297,7 @@
             }
 
             .container {
-            padding: 0.5rem;
+                padding: 0.5rem;
             }
 
             .track-title-container {
@@ -1463,92 +1461,6 @@
             clip: rect(0, 0, 0, 0);
             white-space: nowrap;
             border: 0;
-        }
-
-        /* Mobile responsiveness */
-        /* Replace your mobile media query section with this: */
-        @media (max-width: 768px) {
-            .band-members-grid {
-                grid-template-columns: 1fr;
-                gap: 1rem;
-            }
-            
-            /* Reduce card horizontal padding */
-            .band-member-card {
-                padding: 1rem 0.5rem;
-            }
-            
-            .member-thumbnail {
-                width: 100px;
-                height: 100px;
-            }
-            
-            .member-name {
-                font-size: 1.1rem;
-            }
-            
-            /* REMOVE the conflicting .band-member-card .bio-content rule */
-            /* Only keep this one rule for bio content: */
-            .member-bio.expanded .bio-content {
-                /* Pull back to container edges */
-                margin-left: calc(-0.5rem - 0.5rem); /* Card padding + container padding */
-                margin-right: calc(-0.5rem - 0.5rem);
-                border-radius: 0;
-                padding-left: 1rem;
-                padding-right: 1rem;
-                font-size: 0.9rem;
-            }
-            
-            /* Other existing mobile styles... */
-            .main-content {
-                grid-template-columns: 1fr;
-                gap: 2rem;
-            }
-            
-            .album-cover {
-                width: 280px;
-                height: 280px;
-            }
-            
-            .controls {
-                flex-direction: column;
-                align-items: center;
-            }
-            
-            .btn {
-                width: 100%;
-                max-width: 300px;
-                justify-content: center;
-            }
-
-            .container {
-            padding: 0.5rem;
-            }
-
-            .track-title-container {
-                flex-direction: column;
-                align-items: flex-start;
-                gap: 0.5rem;
-            }
-
-            .like-button {
-                align-self: flex-start;
-            }
-            
-            .audio-controls {
-                flex-wrap: wrap;
-                gap: 0.5rem;
-            }
-            
-            .volume-container {
-                order: 3;
-                width: 100%;
-                justify-content: center;
-            }
-
-            .social-links {
-                gap: 1rem;
-            }
         }
 
         /* High contrast mode support */
